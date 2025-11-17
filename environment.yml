@@ -1,0 +1,11 @@
+name: midtown-watcher
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - discord.py
+      - aiohttp
+      - beautifulsoup4
+      - python-dotenv
