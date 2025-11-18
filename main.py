@@ -145,6 +145,19 @@ async def monitor(client: discord.Client):
                 print(f"Could not send shutdown message (already disconnected): {e}")
 
 intents = discord.Intents.default()
+"""
+This will only work for you if you've enabled the Message Content Intent in your bot's portal.
+
+As of now, the bot only sends messages; it never reads the content of any message. 
+
+Thus, this is technically asking for a permission you don't use.
+
+That said, you do need this to work within channels and add commands later, so I'm leaving it untouched intentionally.
+
+Enable these permissions within your Discord bot's settings, and you will increase the capabilities greatly.
+
+If you never want to, then simply comment out the below.
+"""
 intents.messages = True
 intents.dm_messages = True
 
