@@ -1,10 +1,12 @@
-from bs4 import BeautifulSoup
+import sys
+import os
 
-# Copy any of your jobs from the bot you want to test
-SEARCH_JOBS = {
-    "artgerm_virgin": ["artgerm", "virgin"],
-    "villalobos_virgin": ["villalobos", "virgin"],
-}
+# Add the parent directory to sys.path so main.py can be reached
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from bs4 import BeautifulSoup
+# --- Automatically imports current SEARCH_JOBS from the bot ---
+from main import SEARCH_JOBS
 
 FILES_TO_TEST = ["scraped_covers.html", "test_page.html"]
 
