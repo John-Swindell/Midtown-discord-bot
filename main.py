@@ -25,6 +25,7 @@ I'll add an example at the end
 SEARCH_JOBS = {
     "artgerm_virgin":    ["artgerm", "virgin"],
     "villalobos_virgin": ["villalobos", "virgin"],
+    "1_in_200_incentive": ["1:200"],
     # Following this format, you can add any other specific variants you want in the future
     # "JSC_virgin": ["Campbell", "virgin"],
 }
