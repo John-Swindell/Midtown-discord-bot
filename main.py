@@ -29,6 +29,11 @@ SEARCH_JOBS = {
     # "JSC_virgin": ["Campbell", "virgin"],
 }
 
+# Headers used to spoof a real browser, rather than self-identifying traffic as aiohttp.
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
+
 class MyClient(discord.Client):
     async def setup_hook(self):
         # This is the way to properly monitor in Discord 2.x+
@@ -48,11 +53,12 @@ async def check_page(session):
             return set()  # Return an empty set
 
         # --- TESTING SUITE START ---
-        # Uncomment this to have the payload saved.
+        # Uncomment this to have the HTML payload saved.
 
-        # Saves the found HTML payload to a file for debugging
         # This will overwrite 'scraped_covers.html' on every check
         # try:
+        #     # Automatically create the directory if it doesn't exist
+        #     os.makedirs("./testing_suite", exist_ok=True)
         #     with open("./testing_suite/scraped_covers.html", "w", encoding="utf-8") as f:
         #         f.write(variant_grid.prettify())
         # except Exception as e:
@@ -97,7 +103,7 @@ async def monitor(client: discord.Client):
         # This dictionary tracks the alert status FOR EACH JOB
         alert_states = {job_name: False for job_name in SEARCH_JOBS.keys()}
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers=HEADERS) as session:
             while not client.is_closed():
                 try:
                     # This will return a set, e.g., {"artgerm_virgin"}
@@ -146,20 +152,16 @@ async def monitor(client: discord.Client):
 
 intents = discord.Intents.default()
 """
-This will only work for you if you've enabled the Message Content Intent in your bot's portal.
-
+In order to add the below permissions, you must enable "Message Content Intent" in the bot's portal: 
+https://discord.com/developers/applications/
 As of now, the bot only sends messages; it never reads the content of any message. 
+Enabling these permissions will greatly increase the bot's capabilities, but you do not need them for now.
 
-Thus, this is technically asking for a permission you don't use.
-
-That said, you do need this to work within channels and add commands later, so I'm leaving it untouched intentionally.
-
-Enable these permissions within your Discord bot's settings, and you will increase the capabilities greatly.
-
-If you never want to, then simply comment out the below.
+For instance, you can add a /check command to instantly check the book's status at any time, or a /jobs command to show 
+all currently active jobs. If debugging permissions issues with the bot, starting by uncommenting these intents may help
 """
-intents.messages = True
-intents.dm_messages = True
+# intents.messages = True
+# intents.dm_messages = True
 
 client = MyClient(intents=intents)
 
