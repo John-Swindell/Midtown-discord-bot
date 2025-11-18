@@ -170,4 +170,5 @@ client = MyClient(intents=intents)
 async def on_ready():
     print(f"Logged in as {client.user}")
 
-client.run(TOKEN)
+if __name__ == "__main__":
+    client.run(TOKEN)
