@@ -83,58 +83,66 @@ async def check_page(session):
 
 async def monitor(client: discord.Client):
     await client.wait_until_ready()
-    user = await client.fetch_user(USER_ID)
-
-    print("Monitor task started")
-
-    # Format the parameters for a clean startup message
-    params_str = ", ".join(SEARCH_JOBS.keys())
-    startup_msg = f"Monitoring started.\n> **Link:** {URL}\n> **Tracking:** {params_str}"
 
     try:
+        user = await client.fetch_user(USER_ID)
+
+        # Startup message
+        print("Monitor task started")
+        params_str = ", ".join(SEARCH_JOBS.keys())
+        startup_msg = f"Monitoring started.\n> **Link:** {URL}\n> **Tracking:** {params_str}"
         await user.send(startup_msg)
         print("Startup message sent to user.")
-    except Exception as e:
-        print(f"Error sending startup message: {e}")
 
+        # This dictionary tracks the alert status FOR EACH JOB
+        alert_states = {job_name: False for job_name in SEARCH_JOBS.keys()}
 
-    # This dictionary tracks the alert status FOR EACH JOB
-    # e.g., {"artgerm_virgin": False, "villalobos_virgin": False}
-    alert_states = {job_name: False for job_name in SEARCH_JOBS.keys()}
-
-    async with aiohttp.ClientSession() as session:
-        while not client.is_closed():
-            try:
-                # This will return a set, e.g., {"artgerm_virgin"}
-                found_jobs = await check_page(session)
-
-                # Loop through all possible jobs to update their state
-                for job_name in SEARCH_JOBS.keys():
-
-                    # Checks for new alerts
-                    if job_name in found_jobs and not alert_states[job_name]:
-                        msg = f"Variant spotted! Found '{job_name}' at {URL}"
-                        await user.send(msg)
-                        alert_states[job_name] = True  # Mark THIS JOB as "alerted"
-                        print(f"Keyword '{job_name}' found — alert sent.")
-
-                    # Check for resets
-                    elif job_name not in found_jobs and alert_states[job_name]:
-                        print(f"'{job_name}' is no longer listed. Resetting alert.")
-                        alert_states[job_name] = False  # Reset (for restocks)
-
-            except Exception as e:
-                # This catches a major unrecoverable crash (e.g., UID is wrong)
-                print(f"The bot has crashed. Error: {e}")
+        async with aiohttp.ClientSession() as session:
+            while not client.is_closed():
                 try:
-                    await user.send(f"The bot has crashed. Error:\n`{e}`")
-                except Exception as e2:
-                    print(f"Could not send crash DM: {e2}")
-                print("Error checking page:", e)
+                    # This will return a set, e.g., {"artgerm_virgin"}
+                    found_jobs = await check_page(session)
 
-            # Can change this for faster/slower updating. Keep in mind, too fast may get you IP banned from the site.
-            await asyncio.sleep(60)
+                    # Loop through all possible jobs to update their state
+                    for job_name in SEARCH_JOBS.keys():
 
+                        # Check for new alerts
+                        if job_name in found_jobs and not alert_states[job_name]:
+                            msg = f"Variant spotted! Found '{job_name}' at {URL}"
+                            await user.send(msg)
+                            alert_states[job_name] = True  # Mark THIS JOB specifically as "alerted"
+                            print(f"Keyword '{job_name}' found — alert sent.")
+
+                        # Check for resets
+                        elif job_name not in found_jobs and alert_states[job_name]:
+                            print(f"'{job_name}' is no longer listed. Resetting alert.")
+                            alert_states[job_name] = False  # Reset (for restocks)
+
+                except Exception as e:
+                    # This catches temporary web errors and keeps the loop running
+                    print(f"Error checking page (will retry): {e}")
+
+                # Can change this for faster/slower updating
+                await asyncio.sleep(60)
+
+    except Exception as e:
+        # This catches a major, unrecoverable crash (e.g., UID is wrong)
+        print(f"Bot monitor has crashed: {e}")
+        try:
+            # Try to send a DM to let you know it's dead
+            await user.send(f"Bot monitor has crashed.\n`{e}`")
+        except Exception as e2:
+            print(f"Could not send crash DM: {e2}")
+
+    finally:
+        # This runs on a clean shutdown (Ctrl+C)
+        print("Monitor task shutting down.")
+        if not client.is_closed():
+            try:
+                await user.send("Monitoring stopped.")
+                print("Shutdown message sent.")
+            except Exception as e:
+                print(f"Could not send shutdown message (already disconnected): {e}")
 
 intents = discord.Intents.default()
 intents.messages = True
