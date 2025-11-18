@@ -87,6 +87,17 @@ async def monitor(client: discord.Client):
 
     print("Monitor task started")
 
+    # Format the parameters for a clean startup message
+    params_str = ", ".join(SEARCH_JOBS.keys())
+    startup_msg = f"Monitoring started.\n> **Link:** {URL}\n> **Tracking:** {params_str}"
+
+    try:
+        await user.send(startup_msg)
+        print("Startup message sent to user.")
+    except Exception as e:
+        print(f"Error sending startup message: {e}")
+
+
     # This dictionary tracks the alert status FOR EACH JOB
     # e.g., {"artgerm_virgin": False, "villalobos_virgin": False}
     alert_states = {job_name: False for job_name in SEARCH_JOBS.keys()}
@@ -100,10 +111,8 @@ async def monitor(client: discord.Client):
                 # Loop through all possible jobs to update their state
                 for job_name in SEARCH_JOBS.keys():
 
-                    # Check for NEW alerts
-                    # If the job was found AND we haven't alerted for it yet
+                    # Checks for new alerts
                     if job_name in found_jobs and not alert_states[job_name]:
-                        # Sends a SPECIFIC message for this job
                         msg = f"Variant spotted! Found '{job_name}' at {URL}"
                         await user.send(msg)
                         alert_states[job_name] = True  # Mark THIS JOB as "alerted"
@@ -115,6 +124,12 @@ async def monitor(client: discord.Client):
                         alert_states[job_name] = False  # Reset (for restocks)
 
             except Exception as e:
+                # This catches a major unrecoverable crash (e.g., UID is wrong)
+                print(f"The bot has crashed. Error: {e}")
+                try:
+                    await user.send(f"The bot has crashed. Error:\n`{e}`")
+                except Exception as e2:
+                    print(f"Could not send crash DM: {e2}")
                 print("Error checking page:", e)
 
             # Can change this for faster/slower updating. Keep in mind, too fast may get you IP banned from the site.
