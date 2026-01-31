@@ -83,7 +83,7 @@ If you see these `"RESUMED"` Logs, don't worry. It usually means a system stutte
 ### Blocking vs. Non-Blocking
 Just like you wouldn't block the main UI thread in JS, you cannot block the loop here.
 
-* ❌ **Bad:** `time.sleep(60)`
+* **Bad:** `time.sleep(60)`
     * **Why:** This pauses the *entire* thread. It stops the Event Loop, kills the Heartbeat `setInterval`, and causes a connection timeout.
-* ✅ **Good:** `await asyncio.sleep(60)`
+* **Good:** `await asyncio.sleep(60)`
     * **Why:** This yields control back to the loop (like a Promise/`setTimeout`), allowing the bot to keep the WebSocket alive while waiting.
